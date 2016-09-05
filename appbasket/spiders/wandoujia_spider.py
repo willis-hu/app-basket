@@ -4,6 +4,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 import re
 import scrapy
+from scrapy.http import Request
 import logging
 import time, datetime
 from appbasket.items import AppbasketItem
@@ -15,7 +16,7 @@ class WandoujiaSpider(scrapy.Spider):
     # 爬虫名字
     name = "wandoujia"
     # 限制范围
-    allowed_domains = ["www.wandoujia.com/apps/", "wandoujia.com/apps/"]
+    allowed_domains = ["www.wandoujia.com"]
     # 种子URL
     start_urls = [
         "http://www.wandoujia.com/apps/com.tencent.mm#comments",
@@ -27,14 +28,13 @@ class WandoujiaSpider(scrapy.Spider):
         selector = scrapy.Selector(response)
 
         # APP信息容器
-        item = self.getItem(selector, response)
+        yield self.getItem(selector, response)
 
         # 递归搜索URL
         relateApp_urls = selector.xpath('//a[@data-track="detail-click-relateApp"]/@href').extract()
         for url in relateApp_urls:
             print url
-        
-        return
+            yield Request(url, callback=self.parse)
 
     # 提取Item
     def getItem(self, selector, response):
@@ -196,10 +196,10 @@ class WandoujiaSpider(scrapy.Spider):
             install_count_str = (re.sub(pattern,' ',eles[0])).strip()
             arr = install_count_str.split(" ")
             if (1 == len(arr)):
-                install_count = long(arr[0])
+                install_count = float(arr[0])
             else:
-                install_count = long(arr[0]) * self.unitToNum(arr[1])
-        item['install_count'] = install_count
+                install_count = float(arr[0]) * self.unitToNum(arr[1])
+        item['install_count'] = long(install_count)
 
         return
 
@@ -215,10 +215,10 @@ class WandoujiaSpider(scrapy.Spider):
             num_str = (re.sub(pattern,' ',eles[0])).strip()
             arr = num_str.split(" ")
             if (1 == len(arr)):
-                like_count = long(arr[0])
+                like_count = float(arr[0])
             else:
-                like_count = long(arr[0]) * self.unitToNum(arr[1])
-        item['like_count'] = like_count
+                like_count = float(arr[0]) * self.unitToNum(arr[1])
+        item['like_count'] = long(like_count)
 
         return
 
@@ -267,9 +267,9 @@ class WandoujiaSpider(scrapy.Spider):
         n_str = (re.sub(pattern,' ', n_str)).strip()
         arr = n_str.split(" ")
         if (1 == len(arr)):
-            return long(arr[0])
+            return long(float(arr[0]))
         else:
-            return long(arr[0]) * self.unitToNum(arr[1])
+            return long(float(arr[0])) * self.unitToNum(arr[1])
 
     # 文字单位转数字，例如："万" --> 10000L
     def unitToNum(self, unit):
