@@ -1,19 +1,19 @@
 ****
 
-#<center>app-basket</center>
+#	<center>app-basket</center>
 ##### <center>Author: HouJP_NSD</center>
 ##### <center>E-mail: houjp1992@gmail.com</center>
 
 ****
 
-##目录
+##	目录
 *	[项目介绍](#intro)
 *	[使用说明](#usage)
 *	[版本更新](#version)
 
 ****
 
-##<a name="intro">项目介绍</a>
+##	<a name="intro">项目介绍</a>
 
 基于scrapy框架完成的APP爬虫，用于收集安卓系统下各类应用的基本信息。
 
@@ -48,7 +48,7 @@
 
 ****
 
-##<a name="usage">使用说明</a>
+##	<a name="usage">使用说明</a>
 
 *	无使用说明
 
@@ -57,7 +57,7 @@
 
 ****
 
-##<a name="version">版本更新</a>
+##	<a name="version">版本更新</a>
 
 *	2016-09-05
 	*	完成【豌豆荚】站点HTML解析
