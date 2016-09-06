@@ -36,14 +36,14 @@ class WandoujiaSpider(scrapy.Spider):
     # 载入start_urls
     def loadStartURLs(self):
         # 文件URL
-        # file = open('data/apps.txt', 'r')
-        # for line in file:
-        #     self.start_urls.append(prefix + line)
-        # file.close()
+        file = open('data/apps.txt', 'r')
+        for line in file:
+            self.start_urls.append(prefix + line)
+        file.close()
 
         # 固定URL
-        self.start_urls.append("http://www.wandoujia.com/apps/br.com.newcontent.tnn")
-        self.start_urls.append("http://www.wandoujia.com/apps/com.tencent.mm")
+        # self.start_urls.append("http://www.wandoujia.com/apps/br.com.newcontent.tnn")
+        # self.start_urls.append("http://www.wandoujia.com/apps/com.tencent.mm")
 
         return
 
