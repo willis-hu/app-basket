@@ -14,7 +14,7 @@ from appbasket.utils import LogUtil
 class WandoujiaSpider(scrapy.Spider):
 
     # 爬取间隔1s
-    download_delay = 1
+    # download_delay = 1
     # 爬虫名字
     name = "wandoujia"
     # 限制范围
