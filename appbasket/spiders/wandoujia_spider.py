@@ -31,6 +31,9 @@ class WandoujiaSpider(scrapy.Spider):
         # 载入start_urls
         self.loadStartURLs()
 
+        # 统计处理url总数
+        self.urls_sum = 0L
+
         return
 
     # 载入start_urls
@@ -60,6 +63,10 @@ class WandoujiaSpider(scrapy.Spider):
         # for url in relateApp_urls:
         #     print url
         #     yield Request(url, callback=self.parse)
+
+        # 已处理URL数目统计
+        self.urls_sum += 1
+        LogUtil.log("urls_sum(%d)" % self.urls_sum)
 
     # 提取Item
     def getItem(self, selector, response):
