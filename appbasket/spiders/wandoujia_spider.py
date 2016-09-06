@@ -8,6 +8,8 @@ from scrapy.http import Request
 import logging
 import time, datetime
 from appbasket.items import AppbasketItem
+from appbasket.utils import StrUtil
+from appbasket.utils import LogUtil
 
 class WandoujiaSpider(scrapy.Spider):
 
@@ -34,7 +36,7 @@ class WandoujiaSpider(scrapy.Spider):
         relateApp_urls = selector.xpath('//a[@data-track="detail-click-relateApp"]/@href').extract()
         for url in relateApp_urls:
             print url
-            yield Request(url, callback=self.parse)
+            # yield Request(url, callback=self.parse)
 
     # 提取Item
     def getItem(self, selector, response):
@@ -42,9 +44,9 @@ class WandoujiaSpider(scrapy.Spider):
         item = AppbasketItem()
 
         # 更新信息
-        item['channel'] = "豌豆荚"
-        item['crawl_time'] = long(time.time())
-        item['crawl_url'] = str(response.url).encode('utf-8')
+        self.getChannel(selector, item)
+        self.getCrawlTime(selector, item)
+        self.getCrawlURL(selector, item, response)
         self.getName(selector, item)
         self.getSize(selector, item)
         self.getUpdateTime(selector, item)
@@ -56,13 +58,37 @@ class WandoujiaSpider(scrapy.Spider):
         self.getInstallCount(selector, item)
         self.getLikeCount(selector, item)
         self.getCommentCount(selector, item)
-        item['comment_best_count'] = -1L
-        item['comment_good_count'] = -1L
-        item['comment_bad_count'] = -1L
+        self.getCommentBestCount(selector, item)
+        self.getCommentGoodCount(selector, item)
+        self.getCommentBadCount(selector, item)
         self.getEditorComment(selector, item)
         self.getDescInfo(selector, item)
 
         return item
+
+    # 获取渠道
+    def getChannel(self, selector, item):
+        item['channel'] = "豌豆荚"
+
+        LogUtil.log("channel(%s)" % item['channel'])
+
+        return
+
+    # 获取爬取时间
+    def getCrawlTime(self, selector, item):
+        item['crawl_time'] = long(time.time())
+
+        LogUtil.log("crawl_time(%d)" % item['crawl_time'])
+
+        return
+
+    # 获取爬取url
+    def getCrawlURL(self, selector, item, response):
+        item['crawl_url'] = str(response.url).encode('utf-8')
+
+        LogUtil.log("crawl_url(%s)" % item['crawl_url'])
+
+        return
 
     # 获取软件名
     def getName(self, selector, item):
@@ -74,7 +100,8 @@ class WandoujiaSpider(scrapy.Spider):
         if (0 != len(eles)):
             name = eles[0]
 
-        item['name'] = name
+        item['name'] = StrUtil.delWhiteSpace(name)
+        LogUtil.log("name(%s)" % item['name'])
 
         return
 
@@ -89,6 +116,7 @@ class WandoujiaSpider(scrapy.Spider):
             size = long(eles[0])
 
         item['size'] = size
+        LogUtil.log("size(%d)" % item['size'])
 
         return
 
@@ -104,6 +132,8 @@ class WandoujiaSpider(scrapy.Spider):
             update_time = long(time.mktime(d.timetuple()))
         item['update_time'] = update_time
 
+        LogUtil.log("update_time(%d)" % item['update_time'])
+
         return
 
     # 获取软件标签
@@ -114,14 +144,16 @@ class WandoujiaSpider(scrapy.Spider):
         tags = selector.xpath(xpath).extract()
         for i in range(len(tags)):
             if (i):
-                tag = tag + "-" + tags[i].strip()
+                tag = tag + "-" + StrUtil.delWhiteSpace(tags[i])
             else:
-                tag = tags[i].strip()
+                tag = StrUtil.delWhiteSpace(tags[i])
         
         if (0 != len(tag)):
             item['tag'] = tag
         else:
             item['tag'] = "NULL"
+
+        LogUtil.log("tag(%s)" % item['tag'])
 
         return
 
@@ -133,14 +165,16 @@ class WandoujiaSpider(scrapy.Spider):
         categories = selector.xpath(xpath).extract()
         for i in range(len(categories)):
             if (i):
-                category = category + "-" + categories[i].strip()
+                category = category + "-" + StrUtil.delWhiteSpace(categories[i])
             else:
-                category = categories[i].strip()
+                category = StrUtil.delWhiteSpace(categories[i])
         
         if (0 != len(category)):
             item['category'] = category
         else:
             item['category'] = "NULL"
+
+        LogUtil.log("category(%s)" % item['category'])    
 
         return
 
@@ -150,9 +184,11 @@ class WandoujiaSpider(scrapy.Spider):
         eles = selector.xpath(xpath).extract()
 
         if (0 != len(eles)):
-            item['version'] = eles[0]
+            item['version'] = StrUtil.delWhiteSpace(eles[0])
         else:
             item['version'] = "NULL"
+
+        LogUtil.log("version(%s)" % item['version'])    
 
         return
 
@@ -168,6 +204,8 @@ class WandoujiaSpider(scrapy.Spider):
             system = (re.sub(pattern,' ',eles[0])).strip()
         item['system'] = system
 
+        LogUtil.log("system(%s)" % item['system'])    
+
         return
 
     # 获取来源信息
@@ -181,6 +219,8 @@ class WandoujiaSpider(scrapy.Spider):
             pattern = re.compile('\s+')
             source = (re.sub(pattern,' ',eles[0])).strip()
         item['source'] = source
+
+        LogUtil.log("source(%s)" % item['source'])    
 
         return
 
@@ -201,6 +241,8 @@ class WandoujiaSpider(scrapy.Spider):
                 install_count = float(arr[0]) * self.unitToNum(arr[1])
         item['install_count'] = long(install_count)
 
+        LogUtil.log("install_count(%d)" % item['install_count'])    
+
         return
 
     # 获取喜欢人数
@@ -220,6 +262,8 @@ class WandoujiaSpider(scrapy.Spider):
                 like_count = float(arr[0]) * self.unitToNum(arr[1])
         item['like_count'] = long(like_count)
 
+        LogUtil.log("like_count(%d)" % item['like_count'])    
+
         return
 
     # 获取评论人数
@@ -233,6 +277,32 @@ class WandoujiaSpider(scrapy.Spider):
             comment_count = self.strToNum(eles[0])
         item['comment_count'] = comment_count
 
+        LogUtil.log("comment_count(%d)" % item['comment_count'])    
+
+        return
+
+    # 获取好评数
+    def getCommentBestCount(self, selector, item):
+        item['comment_best_count'] = -1L
+
+        LogUtil.log("comment_best_count(%d)" % item['comment_best_count'])    
+
+        return
+
+    # 获取中评数
+    def getCommentGoodCount(self, selector, item):
+        item['comment_good_count'] = -1L
+
+        LogUtil.log("comment_good_count(%d)" % item['comment_good_count'])    
+
+        return
+
+    # 获取差评数
+    def getCommentBadCount(self, selector, item):
+        item['comment_bad_count'] = -1L
+
+        LogUtil.log("comment_bad_count(%d)" % item['comment_bad_count'])    
+
         return
 
     # 获取编辑评论
@@ -244,7 +314,9 @@ class WandoujiaSpider(scrapy.Spider):
         editor_comment = "NULL"
         if (0 != len(eles)):
             editor_comment = eles[0]
-        item['editor_comment'] = editor_comment
+        item['editor_comment'] = StrUtil.delWhiteSpace(editor_comment)
+
+        LogUtil.log("editor_comment(%s)" % item['editor_comment'])    
 
         return
 
@@ -257,7 +329,9 @@ class WandoujiaSpider(scrapy.Spider):
         desc_info = "NULL"
         if (0 != len(eles)):
             desc_info = eles[0]
-        item['desc_info'] = desc_info
+        item['desc_info'] = StrUtil.delWhiteSpace(desc_info)
+
+        LogUtil.log("desc_info(%s)" % item['desc_info'])    
 
         return
 
@@ -269,7 +343,7 @@ class WandoujiaSpider(scrapy.Spider):
         if (1 == len(arr)):
             return long(float(arr[0]))
         else:
-            return long(float(arr[0])) * self.unitToNum(arr[1])
+            return long(float(arr[0]) * self.unitToNum(arr[1]))
 
     # 文字单位转数字，例如："万" --> 10000L
     def unitToNum(self, unit):
@@ -279,9 +353,3 @@ class WandoujiaSpider(scrapy.Spider):
             return long(1e8)
         else:
             return 1L
-
-    # 日志函数
-    def log(self, msg):
-        print "HouJP >> [" + str(type(msg)) + "] " + "[size: " + str(len(msg)) + "] " + str(msg)
-
-        return

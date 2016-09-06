@@ -18,7 +18,32 @@ class AppbasketPipeline(object):
 
 	def process_item(self, item, spider):
 		# json格式存储
-		line = json.dumps(dict(item)) + '\n'
-		self.file.write(line.decode("unicode_escape"))
+		# line = json.dumps(dict(item)) + '\n'
+		# self.file.write(line.decode("unicode_escape"))
+
+		# tsv格式存储
+		line =  "%s\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s" % ( 		\
+			item['channel'], 		\
+			item['crawl_time'], 	\
+			item['crawl_url'], 	\
+			item['name'], 	\
+			item['size'], 	\
+			item['update_time'], 	\
+			item['category'], 	\
+			item['tag'], 	\
+			item['version'], 	\
+			item['system'], 	\
+			item['source'], 	\
+			item['install_count'], 	\
+			item['like_count'], 	\
+			item['comment_count'], 	\
+			item['comment_best_count'], 	\
+			item['comment_good_count'], 	\
+			item['comment_bad_count'], 	\
+			item['editor_comment'], 	\
+			item['desc_info'] 	\
+			) 
+		self.file.write(line)
+		
 
 		return item
