@@ -26,8 +26,6 @@ class WandoujiaSpider(scrapy.Spider):
         ]
 
     def __init__(self):
-        prefix = "http://www.wandoujia.com/apps/"
-
         # 载入start_urls
         self.loadStartURLs()
 
@@ -38,6 +36,7 @@ class WandoujiaSpider(scrapy.Spider):
 
     # 载入start_urls
     def loadStartURLs(self):
+        prefix = "http://www.wandoujia.com/apps/"
         # 文件URL
         file = open('data/apps.txt', 'r')
         for line in file:
