@@ -28,10 +28,24 @@ class WandoujiaSpider(scrapy.Spider):
     def __init__(self):
         prefix = "http://www.wandoujia.com/apps/"
 
-        file = open('data/apps.txt', 'r')
-        for line in file:
-            self.start_urls.append(prefix + line)
-        file.close()
+        # 载入start_urls
+        self.loadStartURLs()
+
+        return
+
+    # 载入start_urls
+    def loadStartURLs(self):
+        # 文件URL
+        # file = open('data/apps.txt', 'r')
+        # for line in file:
+        #     self.start_urls.append(prefix + line)
+        # file.close()
+
+        # 固定URL
+        self.start_urls.append("http://www.wandoujia.com/apps/br.com.newcontent.tnn")
+        self.start_urls.append("http://www.wandoujia.com/apps/com.tencent.mm")
+
+        return
 
     # 解析函数
     def parse(self, response):
@@ -189,7 +203,8 @@ class WandoujiaSpider(scrapy.Spider):
 
     # 获取版本信息
     def getVersion(self, selector, item):
-        xpath = '//dl[@class="infos-list"]/dd[5]/text()'
+        # xpath = '//dl[@class="infos-list"]/dd[5]/text()'
+        xpath = u'//dl[@class="infos-list"]/dt[text() = "版本"]/following::*[1]/text()'
         eles = selector.xpath(xpath).extract()
 
         if (0 != len(eles)):
@@ -219,9 +234,10 @@ class WandoujiaSpider(scrapy.Spider):
 
     # 获取来源信息
     def getSource(self, selector, item):
-        xpath = '//a[@itemprop="url" and @class="dev-sites"]/span/text()'
+        # xpath = '//a[@itemprop="url" and @class="dev-sites"]/span/text()'
+        xpath = u'//dl[@class="infos-list"]/dt[text() = "来自"]/following::*[1]'
 
-        eles = selector.xpath(xpath).extract()
+        eles = selector.xpath(xpath).xpath('string(.)').extract()
 
         source = "NULL"
         if (0 != len(eles)):
