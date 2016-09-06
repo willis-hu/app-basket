@@ -18,11 +18,20 @@ class WandoujiaSpider(scrapy.Spider):
     # 爬虫名字
     name = "wandoujia"
     # 限制范围
-    allowed_domains = ["www.wandoujia.com"]
+    allowed_domains = ["www.wandoujia.com/apps/"]
     # 种子URL
     start_urls = [
-        "http://www.wandoujia.com/apps/com.tencent.mm#comments",
+        #"http://www.wandoujia.com/apps/zhangyu.spirited.away.puzzle",
+        # "http://www.wandoujia.com/apps/com.tencent.mm03",
         ]
+
+    def __init__(self):
+        prefix = "http://www.wandoujia.com/apps/"
+
+        file = open('data/apps.txt', 'r')
+        for line in file:
+            self.start_urls.append(prefix + line)
+        file.close()
 
     # 解析函数
     def parse(self, response):
@@ -33,10 +42,10 @@ class WandoujiaSpider(scrapy.Spider):
         yield self.getItem(selector, response)
 
         # 递归搜索URL
-        relateApp_urls = selector.xpath('//a[@data-track="detail-click-relateApp"]/@href').extract()
-        for url in relateApp_urls:
-            print url
-            # yield Request(url, callback=self.parse)
+        # relateApp_urls = selector.xpath('//a[@data-track="detail-click-relateApp"]/@href').extract()
+        # for url in relateApp_urls:
+        #     print url
+        #     yield Request(url, callback=self.parse)
 
     # 提取Item
     def getItem(self, selector, response):
@@ -92,7 +101,7 @@ class WandoujiaSpider(scrapy.Spider):
 
     # 获取软件名
     def getName(self, selector, item):
-        xpath = '//span[@class="title"]/text()'
+        xpath = '//p[@class="app-name"]/span[@class="title" and @itemprop="name"]/text()'
 
         eles = selector.xpath(xpath).extract()
 
