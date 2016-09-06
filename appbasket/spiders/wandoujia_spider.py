@@ -40,7 +40,7 @@ class WandoujiaSpider(scrapy.Spider):
         # 文件URL
         file = open('data/apps.txt', 'r')
         for line in file:
-            self.start_urls.append(prefix + line)
+            self.start_urls.append(prefix + StrUtil.delWhiteSpace(line))
         file.close()
 
         # 固定URL
