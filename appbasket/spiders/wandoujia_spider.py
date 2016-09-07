@@ -44,7 +44,7 @@ class WandoujiaSpider(scrapy.Spider):
         file.close()
 
         # 固定URL
-        # self.start_urls.append("http://www.wandoujia.com/apps/br.com.newcontent.tnn")
+        # self.start_urls.append("http://www.wandoujia.com/apps/air.jp.funkyland.AliceHouse2")
         # self.start_urls.append("http://www.wandoujia.com/apps/com.tencent.mm")
 
         return
@@ -353,13 +353,14 @@ class WandoujiaSpider(scrapy.Spider):
 
     # 获取软件描述
     def getDescInfo(self, selector, item):
-        xpath = '//div[@itemprop="description"]'
+        xpath = '//div[@itemprop="description"]//text()'
 
-        eles = selector.xpath(xpath).xpath('string(.)').extract()
+        eles = selector.xpath(xpath).extract()
+        # eles = selector.xpath(xpath).xpath('string(., " ")').extract()
 
         desc_info = "NULL"
         if (0 != len(eles)):
-            desc_info = eles[0]
+            desc_info = " ".join(eles)
         item['desc_info'] = StrUtil.delWhiteSpace(desc_info)
 
         LogUtil.log("desc_info(%s)" % item['desc_info'])    
