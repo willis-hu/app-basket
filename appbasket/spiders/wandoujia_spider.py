@@ -18,7 +18,7 @@ class WandoujiaSpider(scrapy.Spider):
     # 爬虫名字
     name = "wandoujia"
     # 限制范围
-    allowed_domains = ["www.wandoujia.com/apps/"]
+    allowed_domains = ["www.wandoujia.com"]
     # 种子URL
     start_urls = [
         #"http://www.wandoujia.com/apps/zhangyu.spirited.away.puzzle",
@@ -38,14 +38,18 @@ class WandoujiaSpider(scrapy.Spider):
     def loadStartURLs(self):
         prefix = "http://www.wandoujia.com/apps/"
         # 文件URL
-        file = open('data/apps.txt', 'r')
-        for line in file:
-            self.start_urls.append(prefix + StrUtil.delWhiteSpace(line))
-        file.close()
+        # file = open('data/apps.txt', 'r')
+        # for line in file:
+        #     self.start_urls.append(prefix + StrUtil.delWhiteSpace(line))
+        # file.close()
 
         # 固定URL
-        # self.start_urls.append("http://www.wandoujia.com/apps/air.jp.funkyland.AliceHouse2")
-        # self.start_urls.append("http://www.wandoujia.com/apps/com.tencent.mm")
+        self.start_urls.append("http://www.wandoujia.com/apps") # 应用首页
+        self.start_urls.append("http://www.wandoujia.com/category/app") # 安卓软件
+        self.start_urls.append("http://www.wandoujia.com/category/game") # 安卓游戏
+        # self.start_urls.append("http://www.wandoujia.com/apps/air.jp.funkyland.AliceHouse2") # 旧版应用
+        # self.start_urls.append("http://www.wandoujia.com/apps/com.tencent.mm") # 新版应用
+        # self.start_urls.append("http://www.wandoujia.com/category/408") # 旅游出行首页
 
         return
 
@@ -57,6 +61,28 @@ class WandoujiaSpider(scrapy.Spider):
         # APP信息容器
         yield self.getItem(selector, response)
 
+        # 抽取各类别首页链接
+        cate_links = self.getCateLink(selector)
+        for url in cate_links:
+            url = self.treatURL(url)
+            print url
+            yield Request(url, callback=self.parse)
+
+        # 抽取App详情页面链接
+        app_links = self.getAppLink(selector)
+        for url in app_links:
+            url = self.treatURL(url)
+            print url
+            yield Request(url, callback=self.parse)
+
+        # 抽取各类别页面翻页链接
+        page_links = self.getPageLink(selector)
+        for url in page_links:
+            url = self.treatURL(url)
+            print url
+            yield Request(url, callback=self.parse)
+
+
         # 递归搜索URL
         # relateApp_urls = selector.xpath('//a[@data-track="detail-click-relateApp"]/@href').extract()
         # for url in relateApp_urls:
@@ -66,6 +92,42 @@ class WandoujiaSpider(scrapy.Spider):
         # 已处理URL数目统计
         self.urls_sum += 1
         LogUtil.log("urls_sum(%d)" % self.urls_sum)
+
+    # URL处理函数：
+    #   1. 去除空白符
+    #   2. 补全“http://www.wandoujia.com/”
+    def treatURL(self, url):
+        prefix = "http://www.wandoujia.com/"
+
+        url = url.strip()
+        if (-1 == url.find(prefix)):
+            url = prefix + url
+
+        return url
+
+    # 提取各类别首页链接
+    def getCateLink(self, selector):
+        xpath = '//a[@class="cate-link"]/@href'
+
+        eles = selector.xpath(xpath).extract()
+
+        return eles
+
+    # 提取App详情页面链接
+    def getAppLink(self, selector):
+        xpath = '//div[@class="app-desc"]//a[@title and @class="name"]/@href'
+
+        eles = selector.xpath(xpath).extract()
+
+        return eles
+
+    # 提取各类别页面中翻页链接
+    def getPageLink(self, selector):
+        xpath = '//div[@class="pagination"]//a[contains(@class, "page-item")]/@href'
+
+        eles = selector.xpath(xpath).extract()
+
+        return eles
 
     # 提取Item
     def getItem(self, selector, response):
