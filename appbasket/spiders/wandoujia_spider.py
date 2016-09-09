@@ -65,29 +65,28 @@ class WandoujiaSpider(scrapy.Spider):
         cate_links = self.getCateLink(selector)
         for url in cate_links:
             url = self.treatURL(url)
-            print url
+            # print url
             yield Request(url, callback=self.parse)
 
         # 抽取App详情页面链接
         app_links = self.getAppLink(selector)
         for url in app_links:
             url = self.treatURL(url)
-            print url
+            # print url
             yield Request(url, callback=self.parse)
 
         # 抽取各类别页面翻页链接
         page_links = self.getPageLink(selector)
         for url in page_links:
             url = self.treatURL(url)
-            print url
+            # print url
             yield Request(url, callback=self.parse)
 
-
-        # 递归搜索URL
-        # relateApp_urls = selector.xpath('//a[@data-track="detail-click-relateApp"]/@href').extract()
-        # for url in relateApp_urls:
-        #     print url
-        #     yield Request(url, callback=self.parse)
+        relate_links = self.getRelateLink(selector)
+        for url in relate_links:
+            url = self.treatURL(url)
+            print url
+            yield Request(url, callback=self.parse)
 
         # 已处理URL数目统计
         self.urls_sum += 1
@@ -124,6 +123,14 @@ class WandoujiaSpider(scrapy.Spider):
     # 提取各类别页面中翻页链接
     def getPageLink(self, selector):
         xpath = '//div[@class="pagination"]//a[contains(@class, "page-item")]/@href'
+
+        eles = selector.xpath(xpath).extract()
+
+        return eles
+
+    # 提取相关软件链接
+    def getRelateLink(self, selector):
+        xpath = '//a[@data-track="detail-click-relateApp"]/@href'
 
         eles = selector.xpath(xpath).extract()
 
