@@ -14,6 +14,9 @@ BOT_NAME = 'appbasket'
 SPIDER_MODULES = ['appbasket.spiders']
 NEWSPIDER_MODULE = 'appbasket.spiders'
 
+# 禁止重定向
+REDIRECT_MAX_TIMES = 0
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'appbasket (+http://www.yourdomain.com)'
