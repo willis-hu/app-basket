@@ -32,7 +32,7 @@ class AppbasketPipeline(object):
 		# self.file.write(line.decode("unicode_escape"))
 
 		# tsv格式存储
-		line =  "%s\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\n" % ( 		\
+		line =  "%s\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%d\n" % ( 		\
 			item['channel'], 		\
 			item['crawl_time'], 	\
 			item['crawl_url'], 		\
@@ -52,6 +52,7 @@ class AppbasketPipeline(object):
 			item['comment_bad_count'], 		\
 			item['editor_comment'], 		\
 			item['desc_info'] 		\
+			item['score'] 		\
 			) 
 		self.file.write(line)
 		

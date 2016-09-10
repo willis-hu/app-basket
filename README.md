@@ -43,6 +43,8 @@
 |comment_bad_count|	Int	|差评数|	312|
 |editor_comment|	String|	小编点评	|用滴滴叫出租车，都市畅行无阻。滴滴一下，美好出行！|
 |desc_info|	String	|描述	|（省略）|
+|score|	String	|评分（100分制）	|（省略）|
+|feature|	String	|特性	|官方版-安全-优质-MTC认证|
 
 
 

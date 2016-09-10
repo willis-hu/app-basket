@@ -30,4 +30,6 @@ class AppbasketItem(scrapy.Item):
     comment_bad_count	= scrapy.Field()
     editor_comment	= scrapy.Field()
     desc_info		= scrapy.Field()
+    score           = scrapy.Field()
+    feature         = scrapy.Field()
 

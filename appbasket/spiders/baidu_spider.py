@@ -11,12 +11,12 @@ from appbasket.items import AppbasketItem
 from appbasket.utils import StrUtil
 from appbasket.utils import LogUtil
 
-class WandoujiaSpider(scrapy.Spider):
+class BaiduSpider(scrapy.Spider):
 
     # 爬虫名字
-    name = "wandoujia"
+    name = "baidu"
     # 限制范围
-    allowed_domains = ["www.wandoujia.com"]
+    allowed_domains = ["shouji.baidu.com"]
     # 种子URL
     start_urls = []
 
@@ -31,21 +31,10 @@ class WandoujiaSpider(scrapy.Spider):
 
     # 载入start_urls
     def loadStartURLs(self):
-        prefix = "http://www.wandoujia.com/apps/"
-        # 文件URL
-        file = open('data/apps.txt', 'r')
-        for line in file:
-            self.start_urls.append(prefix + StrUtil.delWhiteSpace(line))
-        file.close()
 
         # 固定URL
-        self.start_urls.append("http://www.wandoujia.com/apps") # 应用首页
-        self.start_urls.append("http://www.wandoujia.com/category/app") # 安卓软件
-        self.start_urls.append("http://www.wandoujia.com/category/game") # 安卓游戏
-        # self.start_urls.append("http://www.wandoujia.com/apps/air.jp.funkyland.AliceHouse2") # 旧版应用
-        # self.start_urls.append("http://www.wandoujia.com/apps/com.tencent.mm") # 新版应用
-        # self.start_urls.append("http://www.wandoujia.com/category/408") # 旅游出行首页
-
+        self.start_urls.append("http://shouji.baidu.com/software/") # 安卓软件
+        
         return
 
     # 解析函数
@@ -55,33 +44,6 @@ class WandoujiaSpider(scrapy.Spider):
 
         # APP信息容器
         yield self.getItem(selector, response)
-
-        # 抽取各类别首页链接
-        cate_links = self.getCateLink(selector)
-        for url in cate_links:
-            url = self.treatURL(url)
-            # print url
-            yield Request(url, callback=self.parse)
-
-        # 抽取App详情页面链接
-        app_links = self.getAppLink(selector)
-        for url in app_links:
-            url = self.treatURL(url)
-            # print url
-            yield Request(url, callback=self.parse)
-
-        # 抽取各类别页面翻页链接
-        page_links = self.getPageLink(selector)
-        for url in page_links:
-            url = self.treatURL(url)
-            # print url
-            yield Request(url, callback=self.parse)
-
-        relate_links = self.getRelateLink(selector)
-        for url in relate_links:
-            url = self.treatURL(url)
-            print url
-            yield Request(url, callback=self.parse)
 
         # 已处理URL数目统计
         self.urls_sum += 1
@@ -156,8 +118,6 @@ class WandoujiaSpider(scrapy.Spider):
         self.getCommentBadCount(selector, item)
         self.getEditorComment(selector, item)
         self.getDescInfo(selector, item)
-        self.getScore(selector, item)
-        self.getFeature(selector, item)
 
         return item
 
@@ -432,22 +392,6 @@ class WandoujiaSpider(scrapy.Spider):
         LogUtil.log("desc_info(%s)" % item['desc_info'])    
 
         return
-
-    # 获取评分
-    def getScore(self, selector, item):
-        item['score'] = -1
-
-        LogUtil.log("score(%d)" % item['score'])
-
-        return  
-
-    # 获取特性
-    def getFeature(self, selector, item):
-        item['feature'] = "NULL"
-
-        LogUtil.log("feature(%s)" % item['feature'])
-
-        return      
 
     # 含有文字单位的数字字符串转数字，例如："345 万" --> 3450000L
     def strToNum(self, n_str):
