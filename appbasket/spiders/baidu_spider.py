@@ -13,8 +13,10 @@ from appbasket.utils import LogUtil
 
 class BaiduSpider(scrapy.Spider):
 
-    # 爬虫名字
+	# 爬虫名字
     name = "baidu"
+    # 域名
+    domain = "http://shouji.baidu.com"
     # 限制范围
     allowed_domains = ["shouji.baidu.com"]
     # 种子URL
@@ -34,7 +36,9 @@ class BaiduSpider(scrapy.Spider):
 
         # 固定URL
         self.start_urls.append("http://shouji.baidu.com/software/") # 安卓软件
-        
+        self.start_urls.append("http://shouji.baidu.com/game/") # 安卓游戏
+        # self.start_urls.append("http://shouji.baidu.com/software/503_board_100_01/") # 聊天软件
+        # self.start_urls.append("http://shouji.baidu.com/software/9935187.html")
         return
 
     # 解析函数
@@ -45,53 +49,74 @@ class BaiduSpider(scrapy.Spider):
         # APP信息容器
         yield self.getItem(selector, response)
 
+        # 提取各类别首页链接
+        for url in self.getCateLink(selector):
+        	# print url
+        	yield Request(url, callback=self.parse)
+
+        # 提取App详情页面链接
+        for url in self.getAppLink(selector):
+        	# print url
+        	yield Request(url, callback=self.parse)
+
+        # 提取翻页链接
+        for url in self.getPageLink(selector, str(response.url).encode('utf-8')):
+        	# print url
+        	yield Request(url, callback=self.parse)
+
+        # 提取相关网页链接
+        for url in self.getRelateLink(selector):
+        	# print url
+        	yield Request(url, callback=self.parse)
+
         # 已处理URL数目统计
         self.urls_sum += 1
         LogUtil.log("urls_sum(%d)" % self.urls_sum)
 
     # URL处理函数：
     #   1. 去除空白符
-    #   2. 补全“http://www.wandoujia.com/”
+    #   2. 补全域名
     def treatURL(self, url):
-        prefix = "http://www.wandoujia.com/"
 
         url = url.strip()
-        if (-1 == url.find(prefix)):
-            url = prefix + url
+        if (-1 == url.find(self.domain)):
+            url = self.domain + url
 
         return url
 
     # 提取各类别首页链接
     def getCateLink(self, selector):
-        xpath = '//a[@class="cate-link"]/@href'
+        xpath = '//li[contains(@class, "cate-item")]//a/@href'
 
         eles = selector.xpath(xpath).extract()
 
-        return eles
+        return filter(StrUtil.isEmpty, map(self.treatURL, eles))
 
     # 提取App详情页面链接
     def getAppLink(self, selector):
-        xpath = '//div[@class="app-desc"]//a[@title and @class="name"]/@href'
+        xpath = '//div[@class="app-box"]/a/@href'
 
         eles = selector.xpath(xpath).extract()
 
-        return eles
+        return filter(StrUtil.isEmpty, map(self.treatURL, eles))
 
     # 提取各类别页面中翻页链接
-    def getPageLink(self, selector):
-        xpath = '//div[@class="pagination"]//a[contains(@class, "page-item")]/@href'
+    def getPageLink(self, selector, prefix):
+        xpath = '//div[@class="pager"]//a/@href'
 
         eles = selector.xpath(xpath).extract()
+        for i in range(len(eles)):
+        	eles[i] = StrUtil.completeURL(prefix, eles[i])
 
-        return eles
+        return filter(StrUtil.isEmpty, eles)
 
     # 提取相关软件链接
     def getRelateLink(self, selector):
-        xpath = '//a[@data-track="detail-click-relateApp"]/@href'
+        xpath = '//div[@class="app-bd show"]//a[@class="app-box"]/@href'
 
         eles = selector.xpath(xpath).extract()
 
-        return eles
+        return filter(StrUtil.isEmpty, map(self.treatURL, eles))
 
     # 提取Item
     def getItem(self, selector, response):
@@ -118,12 +143,14 @@ class BaiduSpider(scrapy.Spider):
         self.getCommentBadCount(selector, item)
         self.getEditorComment(selector, item)
         self.getDescInfo(selector, item)
+        self.getScore(selector, item)
+        self.getFeature(selector, item)
 
         return item
 
     # 获取渠道
     def getChannel(self, selector, item):
-        item['channel'] = "豌豆荚"
+        item['channel'] = "百度手机助手"
 
         LogUtil.log("channel(%s)" % item['channel'])
 
@@ -147,7 +174,7 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取软件名
     def getName(self, selector, item):
-        xpath = '//p[@class="app-name"]/span[@class="title" and @itemprop="name"]/text()'
+        xpath = '//div[@class="app-intro"]//h1[@class="app-name"]/span/text()'
 
         eles = selector.xpath(xpath).extract()
 
@@ -162,30 +189,37 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取软件大小(B)
     def getSize(self, selector, item):
-        xpath = '//meta[@itemprop="fileSize"]/@content'
+        xpath = '//div[@class="app-intro"]//span[@class="size"]/text()'
 
         eles = selector.xpath(xpath).extract()
 
-        size = -1L
-        if (0 != len(eles)):
-            size = long(eles[0])
+        size = -1
 
-        item['size'] = size
+        while True :
+        	if (0 == len(eles)):
+        		break
+        	string = eles[0]
+        	nums = re.findall(r"\d+\.?\d*", string)
+        	if (0 == len(nums)):
+        		break
+        	size = float(nums[0])
+        	if (-1 != string.find('K')):
+        		size *= 1024 
+        	if (-1 != string.find('M')):
+        		size *= 1024 * 1024
+        	if (-1 != string.find('G')):
+        		size *= 1024 * 1024 * 1024
+        	break
+
+        item['size'] = long(size)
         LogUtil.log("size(%d)" % item['size'])
 
         return
 
     # 获取软件版本更新时间
     def getUpdateTime(self, selector, item):
-        xpath = '//time[@itemprop="datePublished"]/text()'
-
-        eles = selector.xpath(xpath).extract()
-
-        update_time = -1L
-        if (0 != len(eles)):
-            d = datetime.datetime.strptime(eles[0],"%Y年%m月%d日")
-            update_time = long(time.mktime(d.timetuple()))
-        item['update_time'] = update_time
+        
+        item['update_time'] = -1
 
         LogUtil.log("update_time(%d)" % item['update_time'])
 
@@ -193,20 +227,8 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取软件标签
     def getTag(self, selector, item):
-        xpath = '//div[@class="side-tags clearfix"]/div/a/text()'
-
-        tag = ""
-        tags = selector.xpath(xpath).extract()
-        for i in range(len(tags)):
-            if (i):
-                tag = tag + "-" + StrUtil.delWhiteSpace(tags[i])
-            else:
-                tag = StrUtil.delWhiteSpace(tags[i])
         
-        if (0 != len(tag)):
-            item['tag'] = tag
-        else:
-            item['tag'] = "NULL"
+    	item['tag'] = "NULL"
 
         LogUtil.log("tag(%s)" % item['tag'])
 
@@ -214,20 +236,20 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取类别信息
     def getCategory(self, selector, item):
-        xpath = '//dd[@class="tag-box"]/a/text()'
+        xpath = '//div[@class="app-nav"]//a/text()'
 
-        category = ""
-        categories = selector.xpath(xpath).extract()
-        for i in range(len(categories)):
-            if (i):
-                category = category + "-" + StrUtil.delWhiteSpace(categories[i])
-            else:
-                category = StrUtil.delWhiteSpace(categories[i])
-        
-        if (0 != len(category)):
-            item['category'] = category
-        else:
-            item['category'] = "NULL"
+        category = "NULL"
+
+        while True:
+
+        	strings = selector.xpath(xpath).extract()
+        	if (1 >= len(strings)):
+        		break
+        	category = "-".join(map(StrUtil.delWhiteSpace, strings[1:]))
+
+        	break
+
+        item['category'] = category
 
         LogUtil.log("category(%s)" % item['category'])    
 
@@ -235,14 +257,22 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取版本信息
     def getVersion(self, selector, item):
-        # xpath = '//dl[@class="infos-list"]/dd[5]/text()'
-        xpath = u'//dl[@class="infos-list"]/dt[text() = "版本"]/following::*[1]/text()'
+        xpath = '//div[@class="app-intro"]//span[@class="version"]/text()'
+
         eles = selector.xpath(xpath).extract()
 
-        if (0 != len(eles)):
-            item['version'] = StrUtil.delWhiteSpace(eles[0])
-        else:
-            item['version'] = "NULL"
+        item['version'] = "NULL"
+
+        while True:
+        	if (0 == len(eles)):
+        		break
+        	string = eles[0]
+        	nums = re.findall(r"\d+[\.\d+]*", string)
+        	if (0 == len(nums)):
+        		break
+        	item['version'] = nums[0]
+
+        	break
 
         LogUtil.log("version(%s)" % item['version'])    
 
@@ -250,15 +280,8 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取系统信息
     def getSystem(self, selector, item):
-        xpath = '//dd[@itemprop="operatingSystems"]/text()'
-
-        eles = selector.xpath(xpath).extract()
-
-        system = "NULL"
-        if (0 != len(eles)):
-            pattern = re.compile('\s+')
-            system = (re.sub(pattern,' ',eles[0])).strip()
-        item['system'] = system
+       
+        item['system'] = "NULL"
 
         LogUtil.log("system(%s)" % item['system'])    
 
@@ -266,16 +289,19 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取来源信息
     def getSource(self, selector, item):
-        # xpath = '//a[@itemprop="url" and @class="dev-sites"]/span/text()'
-        xpath = u'//dl[@class="infos-list"]/dt[text() = "来自"]/following::*[1]'
+        xpath = '//div[@class="app-intro"]//div[@class="origin-wrap"]//a[@class="origin"]/text()'
 
-        eles = selector.xpath(xpath).xpath('string(.)').extract()
+        item['source'] = "NULL"
 
-        source = "NULL"
-        if (0 != len(eles)):
-            pattern = re.compile('\s+')
-            source = (re.sub(pattern,' ',eles[0])).strip()
-        item['source'] = source
+        while True:
+        	eles = selector.xpath(xpath).extract()
+
+        	if (0 == len(eles)):
+        		break
+        	string = eles[0]
+        	item['source'] = StrUtil.delWhiteSpace(string)
+
+        	break
 
         LogUtil.log("source(%s)" % item['source'])    
 
@@ -283,20 +309,27 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取安装人数
     def getInstallCount(self, selector, item):
-        xpath = '//i[@itemprop="interactionCount"]/text()'
+        xpath = '//div[@class="app-intro"]//span[@class="download-num"]/text()'
 
-        eles = selector.xpath(xpath).extract()
+        item['install_count'] = -1L
 
-        install_count = -1L
-        if (0 != len(eles)):
-            pattern = re.compile('\s+')
-            install_count_str = (re.sub(pattern,' ',eles[0])).strip()
-            arr = install_count_str.split(" ")
-            if (1 == len(arr)):
-                install_count = float(arr[0])
-            else:
-                install_count = float(arr[0]) * self.unitToNum(arr[1])
-        item['install_count'] = long(install_count)
+        while True:
+        	eles = selector.xpath(xpath).extract()
+        	if (0 == len(eles)):
+        		break
+        	string = eles[0]
+        	nums = re.findall(r"\d+\.?\d*", string)
+        	if (0 == len(nums)):
+        		break
+        	num = float(nums[0])
+        	if (-1 != string.find('亿')):
+        		num *= 1e8
+        	if (-1 != string.find('万')):
+        		num *= 1e4
+        	if (-1 != string.find('千')):
+        		num *= 1e3
+        	item['install_count'] = long(num)
+        	break
 
         LogUtil.log("install_count(%d)" % item['install_count'])    
 
@@ -304,20 +337,8 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取喜欢人数
     def getLikeCount(self, selector, item):
-        xpath = '//span[@class="item love"]/i/text()'
 
-        eles = selector.xpath(xpath).extract()
-
-        like_count = -1L
-        if (0 != len(eles)):
-            pattern = re.compile('\s+')
-            num_str = (re.sub(pattern,' ',eles[0])).strip()
-            arr = num_str.split(" ")
-            if (1 == len(arr)):
-                like_count = float(arr[0])
-            else:
-                like_count = float(arr[0]) * self.unitToNum(arr[1])
-        item['like_count'] = long(like_count)
+        item['like_count'] = -1L
 
         LogUtil.log("like_count(%d)" % item['like_count'])    
 
@@ -325,14 +346,8 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取评论人数
     def getCommentCount(self, selector, item):
-        xpath = '//a[@class="item last comment-open"]/i/text()'
-
-        eles = selector.xpath(xpath).extract()
-
-        comment_count = -1L
-        if (0 != len(eles)):
-            comment_count = self.strToNum(eles[0])
-        item['comment_count'] = comment_count
+        
+        item['comment_count'] = -1L
 
         LogUtil.log("comment_count(%d)" % item['comment_count'])    
 
@@ -364,7 +379,7 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取编辑评论
     def getEditorComment(self, selector, item):
-        xpath = '//div[@class="editorComment"]/div/text()'
+        xpath = '//div[@class="app-detail"]//span[@class="head-content"]/text()'
 
         eles = selector.xpath(xpath).extract()
 
@@ -379,7 +394,7 @@ class BaiduSpider(scrapy.Spider):
 
     # 获取软件描述
     def getDescInfo(self, selector, item):
-        xpath = '//div[@itemprop="description"]//text()'
+        xpath = '//div[@class="app-detail"]//div[@class="brief-long"]/p//text()'
 
         eles = selector.xpath(xpath).extract()
         # eles = selector.xpath(xpath).xpath('string(., " ")').extract()
@@ -392,6 +407,44 @@ class BaiduSpider(scrapy.Spider):
         LogUtil.log("desc_info(%s)" % item['desc_info'])    
 
         return
+
+      # 获取评分
+    def getScore(self, selector, item):
+    	xpath = '//div[@class="app-feature"]//span[@class="star-percent"]/@style'
+        
+        item['score'] = -1
+
+        while True:
+        	eles = selector.xpath(xpath).extract()
+        	if (0 == len(eles)):
+        		break
+        	string = eles[0]
+        	nums = re.findall(r"\d+\.?\d*", string)
+        	if (0 == nums):
+        		break
+        	item['score'] = int(nums[0])
+
+        	break
+
+        LogUtil.log("score(%d)" % item['score'])
+
+        return  
+
+    # 获取特性
+    def getFeature(self, selector, item):
+        xpath = '//div[@class="yui3-g"]//div[@class="app-feature"]//span[@class="app-feature-detail"]//text()'
+
+        item['feature'] = "NULL"
+
+        while True:
+        	eles = selector.xpath(xpath).extract()
+        	item['feature'] = "-".join(filter(StrUtil.isEmpty, map(StrUtil.delWhiteSpace, eles)))
+
+        	break
+
+        LogUtil.log("feature(%s)" % item['feature'])
+
+        return    
 
     # 含有文字单位的数字字符串转数字，例如："345 万" --> 3450000L
     def strToNum(self, n_str):

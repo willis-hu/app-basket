@@ -15,6 +15,20 @@ class StrUtil(object):
 		pattern = re.compile('\s+')
 		return (re.sub(pattern, ' ', msg)).strip()
 
+	# 判断字符串是否为空
+	@staticmethod
+	def isEmpty(msg):
+		return msg and msg.strip()
+
+	# 判断URL是否包含prefix并补全
+	@staticmethod
+	def completeURL(prefix, url):
+		url = url.strip()
+		if (-1 == url.find(prefix)):
+			url = prefix + url
+
+		return url
+
 # 日志工具
 class LogUtil(object):
 	def __init__(self):

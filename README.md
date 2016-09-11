@@ -35,7 +35,7 @@
 |version|	String	|版本信息|	4.4.4|
 |system|	String|	手机系统要求|	Android 4.0.3 以上|
 |source|	String|	软件来源	|北京小桔科技有限公司|
-|install_count|	Int	|安装人数|	27480000|
+|install_count|	Int	|安装人数/下载人数|	27480000|
 |like_count|	Int|	喜欢人数|	4421|
 |comment_count|	Int	|评论人数|	3424|
 |comment_best_count|	Int|	好评数|	342|
@@ -43,7 +43,7 @@
 |comment_bad_count|	Int	|差评数|	312|
 |editor_comment|	String|	小编点评	|用滴滴叫出租车，都市畅行无阻。滴滴一下，美好出行！|
 |desc_info|	String	|描述	|（省略）|
-|score|	String	|评分（100分制）	|（省略）|
+|score|	Int	|评分（100分制）	|80|
 |feature|	String	|特性	|官方版-安全-优质-MTC认证|
 
 
@@ -61,6 +61,8 @@
 
 ##	<a name="version">版本更新</a>
 
+*	2016-09-11
+	*	完成【百度手机助手】站点HTML解析
 *	2016-09-05
 	*	完成【豌豆荚】站点HTML解析
 
