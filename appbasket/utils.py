@@ -23,10 +23,8 @@ class StrUtil(object):
 	# 判断URL是否包含prefix并补全
 	@staticmethod
 	def completeURL(prefix, url):
-		url = url.strip()
-		if (-1 == url.find(prefix)):
-			url = prefix + url
-
+		index = prefix.rfind('/')
+		url = prefix[0:index + 1] + url
 		return url
 
 # 日志工具

@@ -38,7 +38,7 @@ class BaiduSpider(scrapy.Spider):
         self.start_urls.append("http://shouji.baidu.com/software/") # 安卓软件
         self.start_urls.append("http://shouji.baidu.com/game/") # 安卓游戏
         # self.start_urls.append("http://shouji.baidu.com/software/503_board_100_01/") # 聊天软件
-        # self.start_urls.append("http://shouji.baidu.com/software/9935187.html")
+        # self.start_urls.append("http://shouji.baidu.com/game/board_100_063/list_4.html")
         return
 
     # 解析函数
