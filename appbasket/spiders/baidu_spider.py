@@ -51,22 +51,22 @@ class BaiduSpider(scrapy.Spider):
 
         # 提取各类别首页链接
         for url in self.getCateLink(selector):
-        	# print url
+        	print url
         	yield Request(url, callback=self.parse)
 
         # 提取App详情页面链接
         for url in self.getAppLink(selector):
-        	# print url
+        	print url
         	yield Request(url, callback=self.parse)
 
         # 提取翻页链接
         for url in self.getPageLink(selector, str(response.url).encode('utf-8')):
-        	# print url
+        	print url
         	yield Request(url, callback=self.parse)
 
         # 提取相关网页链接
         for url in self.getRelateLink(selector):
-        	# print url
+        	print url
         	yield Request(url, callback=self.parse)
 
         # 已处理URL数目统计
