@@ -26,7 +26,9 @@
 
 | 数据来源 | 数据条数 | 目录位置 |
 | ---- | ---- | ---- |
-| 豌豆荚 | 504,518 | data/wandoujia.tsv |
+| 豌豆荚 | 504,518 | data/wandoujia_\d+.tsv |
+| 百度手机助手 | 12,308 | data/baidu.tsv |
+| 360手机助手 | 273,766 | data/wandoujia_\d+.tsv |
 
 目前爬取的信息包含以下字段：
 
@@ -60,9 +62,28 @@
 ##	<a name="usage">使用说明</a>
 
 
+进入工程目录后，执行：
 
+```
+# 爬取【豌豆荚】APP信息
+scrapy crawl wandoujia
 
+# 爬取【百度手机助手】APP信息
+scrapy crawl baidu
 
+# 爬取【360手机助手】APP信息
+scrapy crawl sanliuling
+```
+
+爬取完毕后，数据保存的目录为：
+
+```
+app-basket/data/app-data.tsv
+```
+
+注意事项：
+
+* 不同的爬虫存储的数据文件名相同，因此当一个爬虫爬取完毕后需要对文件重命名，否则下一次爬取时会被重写
 
 
 ****

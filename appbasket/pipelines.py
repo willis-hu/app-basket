@@ -14,7 +14,7 @@ from scrapy.exceptions import DropItem
 
 class AppbasketPipeline(object):
 	def __init__(self):
-		self.file = codecs.open('data/sanliuling.tsv', mode='wb', encoding = 'utf-8')
+		self.file = codecs.open('data/app-data.tsv', mode='wb', encoding = 'utf-8')
 		self.urls = set()
 
 	def process_item(self, item, spider):
